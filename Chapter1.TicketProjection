@@ -1,0 +1,54 @@
+### Ticket: Projection
+
+#### Problem:
+
+
+#### **User Story**
+
+"As a user, I'd like to be able to search movies by country and see a list of movie titles. I should be able to specify a comma-separated list of countries to search multiple countries."
+
+
+#### **Task**
+
+Implement the **getMoviesByCountry** method in <tt class="docutils literal">MovieDao.java</tt> to search movies by country and use projection to return the <tt class="docutils literal">title</tt> field.
+
+#### **MFlix Functionality**
+
+Once you complete this ticket, the UI will allow movie searches by one or more countries.
+
+
+#### **Testing and Running the Application**
+
+Make sure to look at the tests in <tt class="docutils literal">ProjectionTest.java</tt> to understand what is expected.
+
+If the application is already running, **stop the application** and run the unit tests for this ticket by executing the following command:
+
+<pre class="css-11p6kqf e1xc83s75">
+
+<div class="css-1js47yt">mvn test -Dtest=ProjectionTest
+</div>
+
+<div class="css-0"><button type="button" tabindex="0" class="css-ikchmg e1yezos70"><span> COPY</span></button></div>
+
+</pre>
+
+Or run the tests from your IDE.
+
+Once the unit tests are passing, run the application with:
+
+<pre class="css-11p6kqf e1xc83s75">
+
+<div class="css-1js47yt">mvn spring-boot:run
+</div>
+
+<div class="css-0"><button type="button" tabindex="0" class="css-ikchmg e1yezos70"><span> COPY</span></button></div>
+
+</pre>
+
+Or run the <tt class="docutils literal">Application.java</tt> from your IDE.
+
+Now proceed to the [status page](http://localhost:5000/status) to run the full suite of integration tests and get your validation code.
+
+To have the application use the changes that you implemented for this ticket, make sure to **restart the application** after you completed those changes. Also, only refresh the status page to see the new results of the tests, after the application has been restarted.
+
+After passing the relevant unit tests, what is the validation code for **Projection**?
