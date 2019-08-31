@@ -1,5 +1,6 @@
 package mflix.api.daos;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
@@ -198,8 +199,11 @@ public class MovieDao extends AbstractMFlixDao {
     List<Document> movies = new ArrayList<>();
     // TODO > Ticket: Paging - implement the necessary cursor methods to support simple
     // pagination like skip and limit in the code below
-    moviesCollection.find(castFilter).sort(sort).iterator()
-    .forEachRemaining(movies::add);
+    //moviesCollection.find(castFilter).sort(sort).iterator().forEachRemaining(movies::add);
+    FindIterable<Document> documentFindIterable = moviesCollection.find(castFilter).sort(sort).skip(skip).limit(limit);
+    for (Document d: documentFindIterable){
+      movies.add(d);
+    }
     return movies;
   }
 
