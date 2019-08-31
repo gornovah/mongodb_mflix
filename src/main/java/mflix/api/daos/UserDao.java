@@ -154,7 +154,7 @@ public class UserDao extends AbstractMFlixDao {
         try {
             usersCollection.updateOne(eq("email", email),
                     set("preferences", Optional.ofNullable(userPreferences).<IncorrectDaoOperation>orElseThrow(() -> new IncorrectDaoOperation("user preferences cannot be null"))));
-        } catch (IncorrectDaoOperation ex) {
+        } catch (MongoException ex) {
             log.error("An error ocurred while trying to updateUserPreferences.");
             return false;
         }
