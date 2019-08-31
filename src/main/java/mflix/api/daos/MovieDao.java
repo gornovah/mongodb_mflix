@@ -16,6 +16,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Aggregates.lookup;
+import static com.mongodb.client.model.Filters.expr;
+import static com.mongodb.client.model.Indexes.descending;
 import static com.mongodb.client.model.Projections.*;
 import static com.mongodb.client.model.Projections.fields;
 
@@ -35,7 +39,21 @@ public class MovieDao extends AbstractMFlixDao {
 
   @SuppressWarnings("unchecked")
   private Bson buildLookupStage() {
-    return null;
+    String from = "comments";
+    String as = "comments";
+
+    Variable<String> let = new Variable<>("id", "$_id");
+
+    Document eq = Document.parse("{'$eq':['$movie_id','$$id']}");
+    Bson match = match(expr(eq));
+    Bson sort = sort(descending("date"));
+
+    return lookup(
+            from,                       //from
+            Arrays.asList(let),         //let
+            Arrays.asList(match, sort), //pipeline
+            as                          //as
+    );
 
   }
 
@@ -67,8 +85,10 @@ public class MovieDao extends AbstractMFlixDao {
 
     List<Bson> pipeline = new ArrayList<>();
     // match stage to find movie
-    Bson match = Aggregates.match(Filters.eq("_id", new ObjectId(movieId)));
+    Bson match = match(Filters.eq("_id", new ObjectId(movieId)));
+    Bson moviesWithComments = buildLookupStage();
     pipeline.add(match);
+    pipeline.add(moviesWithComments);
     // TODO> Ticket: Get Comments - implement the lookup stage that allows the comments to
     // retrieved with Movies.
     Document movie = moviesCollection.aggregate(pipeline).first();
@@ -238,7 +258,7 @@ public class MovieDao extends AbstractMFlixDao {
     bucketOptions.defaultBucket("other");
     BsonField count = new BsonField("count", new Document("$sum", 1));
     bucketOptions.output(count);
-    return Aggregates.bucket("$runtime", runtimeBoundaries(), bucketOptions);
+    return bucket("$runtime", runtimeBoundaries(), bucketOptions);
   }
 
   /*
@@ -259,7 +279,7 @@ public class MovieDao extends AbstractMFlixDao {
     bucketOptions.defaultBucket("other");
     BsonField count = new BsonField("count", new Document("$sum", 1));
     bucketOptions.output(count);
-    return Aggregates.bucket("$metacritic", ratingBoundaries(), bucketOptions);
+    return bucket("$metacritic", ratingBoundaries(), bucketOptions);
   }
 
   /**
@@ -271,10 +291,10 @@ public class MovieDao extends AbstractMFlixDao {
   public List<Document> getMoviesCastFaceted(int limit, int skip, String... cast) {
     List<Document> movies = new ArrayList<>();
     String sortKey = "tomatoes.viewer.numReviews";
-    Bson skipStage = Aggregates.skip(skip);
-    Bson matchStage = Aggregates.match(Filters.in("cast", cast));
-    Bson sortStage = Aggregates.sort(Sorts.descending(sortKey));
-    Bson limitStage = Aggregates.limit(limit);
+    Bson skipStage = skip(skip);
+    Bson matchStage = match(Filters.in("cast", cast));
+    Bson sortStage = sort(Sorts.descending(sortKey));
+    Bson limitStage = limit(limit);
     Bson facetStage = buildFacetStage();
     // Using a LinkedList to ensure insertion order
     List<Bson> pipeline = new LinkedList<>();
@@ -302,10 +322,10 @@ public class MovieDao extends AbstractMFlixDao {
    */
   private Bson buildFacetStage() {
 
-    return Aggregates.facet(
+    return facet(
         new Facet("runtime", buildRuntimeBucketStage()),
         new Facet("rating", buildRatingBucketStage()),
-        new Facet("movies", Aggregates.addFields(new Field("title", "$title"))));
+        new Facet("movies", addFields(new Field("title", "$title"))));
   }
 
   /**
