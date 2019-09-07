@@ -26,11 +26,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+import static com.mongodb.client.model.Aggregates.limit;
+import static com.mongodb.client.model.Aggregates.sortByCount;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.combine;
@@ -137,12 +136,16 @@ public class CommentDao extends AbstractMFlixDao {
      * @return true if successful deletes the comment.
      */
     public boolean deleteComment(String commentId, String email) {
-        // TODO> Ticket Delete Comments - Implement the method that enables the deletion of a user
-        // comment
-        // TIP: make sure to match only users that own the given commentId
-        // TODO> Ticket Handling Errors - Implement a try catch block to
-        // handle a potential write exception when given a wrong commentId.
-        return false;
+        if (!Optional.ofNullable(commentId).isPresent()) {
+            throw new IllegalArgumentException("Commend id cannot be null");
+        }
+
+        DeleteResult dr = commentCollection
+                .deleteOne(
+                        and(
+                                eq("_id", new ObjectId(commentId)),
+                                eq("email", email)));
+        return dr.getDeletedCount() > 0;
     }
 
     /**
@@ -160,6 +163,9 @@ public class CommentDao extends AbstractMFlixDao {
         // // guarantee for the returned documents. Once a commenter is in the
         // // top 20 of users, they become a Critic, so mostActive is composed of
         // // Critic objects.
+        List<Bson> pipeline = Arrays.asList(sortByCount("$email"), limit(20));
+        commentCollection.withReadConcern(ReadConcern.MAJORITY)
+                .aggregate(pipeline, Critic.class).iterator().forEachRemaining(mostActive::add);
         return mostActive;
     }
 }
